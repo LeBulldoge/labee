@@ -66,12 +66,19 @@ func (m *DB) GetFiles(keywords []string) ([]File, error) {
 		return nil, err
 	}
 
+	if len(files) == 0 {
+		if keywords != nil {
+			return nil, fmt.Errorf("%w with %v", ErrFilesNotFound, keywords)
+		}
+		return nil, ErrFilesNotFound
+	}
+
 	return files, nil
 }
 
 var (
 	ErrFileAlreadyExists = errors.New("file already exists in storage")
-	ErrFileNotFound      = errors.New("file not found")
+	ErrFilesNotFound     = errors.New("couldn't find files")
 )
 
 func getOrInsertFile(tx *sqlx.Tx, path string) (int64, error) {
