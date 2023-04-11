@@ -126,7 +126,6 @@ func (m *DB) GetFilesByLabels(labels []string) ([]File, error) {
 
 	files := []File{}
 	err := m.db.Select(&files, stmt)
-	fmt.Printf("files: %v\n", files)
 	if err != nil {
 		return nil, err
 	}
