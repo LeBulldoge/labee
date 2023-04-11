@@ -1,4 +1,4 @@
-package main
+package labee
 
 import (
 	"errors"
@@ -42,7 +42,7 @@ func openInteractiveMode(strs []string, preview string) error {
 	return nil
 }
 
-func main() {
+func Run() {
 	app := &cli.App{
 		Name:                   "labee",
 		Usage:                  "Buzz around your files using labels!",
@@ -55,8 +55,8 @@ func main() {
 				ArgsUsage: "[subcommand]",
 				Aliases:   []string{"q"},
 				Subcommands: []*cli.Command{
-					QueryFile,
-					QueryLabel,
+					queryFile,
+					queryLabel,
 				},
 			},
 			{
@@ -133,8 +133,8 @@ func main() {
 				ArgsUsage: "[subcommand]",
 				Aliases:   []string{"r"},
 				Subcommands: []*cli.Command{
-					RemoveFile,
-					RemoveLabel,
+					removeFile,
+					removeLabel,
 				},
 			},
 			{

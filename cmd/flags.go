@@ -1,4 +1,4 @@
-package main
+package labee
 
 import "github.com/urfave/cli/v2"
 

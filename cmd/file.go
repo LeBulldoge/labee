@@ -1,11 +1,9 @@
-package main
+package labee
 
 import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/LeBulldoge/labee/internal/database"
@@ -40,7 +38,7 @@ func printFileInfo(file string, labels []database.Label) {
 }
 
 var (
-	QueryFile = &cli.Command{
+	queryFile = &cli.Command{
 		Name:      "file",
 		Usage:     "Query by file",
 		Aliases:   []string{"f"},
@@ -116,76 +114,7 @@ var (
 		},
 	}
 
-	AddFile = &cli.Command{
-		Name:      "file",
-		Usage:     "Add a new file into the storage or add labels to existing files",
-		ArgsUsage: "[path to file]",
-		Aliases:   []string{"f"},
-		Flags: []cli.Flag{
-			flagQuiet,
-			&cli.StringSliceFlag{
-				Name:    "labels",
-				Aliases: []string{"l"},
-				Usage:   "Add comma separated labels to the file [-l \"labelA, labelB\"]. Creates labels if they don't exist",
-			},
-		},
-		Action: func(ctx *cli.Context) error {
-			var filepaths []string
-
-			if !ctx.Args().Present() {
-				if !pipeArgsAvailable() {
-					return ErrNoArgs
-				}
-				filepaths = readPipeArgs()
-			} else {
-				filepaths = ctx.Args().Slice()
-			}
-
-			db, err := database.New()
-			if err != nil {
-				return err
-			}
-
-			labelNames := ctx.StringSlice("labels")
-
-			var absPaths []string
-			for _, v := range filepaths {
-				_, err := os.Stat(v)
-				if err != nil {
-					return fmt.Errorf("file %s does not exist", v)
-				}
-
-				path, err := filepath.Abs(v)
-				if err != nil {
-					return err
-				}
-
-				absPaths = append(absPaths, path)
-			}
-
-			err = db.AddFilesAndLinks(absPaths, labelNames)
-			if err != nil {
-				return err
-			}
-
-			if quiet {
-				return nil
-			}
-
-			for _, path := range absPaths {
-				labels, err := db.GetFileLabels(path)
-				if err != nil {
-					return err
-				}
-				fmt.Println("New file added:")
-				printFileInfo(path, labels)
-			}
-
-			return nil
-		},
-	}
-
-	RemoveFile = &cli.Command{
+	removeFile = &cli.Command{
 		Name:      "file",
 		Usage:     "Remove file(s) from the storage",
 		ArgsUsage: "[absolute paths]",

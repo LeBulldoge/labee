@@ -1,4 +1,4 @@
-package main
+package labee
 
 import (
 	"errors"
@@ -47,7 +47,7 @@ func colorize(str string, hexColor string) (string, error) {
 }
 
 var (
-	QueryLabel = &cli.Command{
+	queryLabel = &cli.Command{
 		Name:    "label",
 		Usage:   "Find files by their labels",
 		Aliases: []string{"l"},
@@ -138,43 +138,7 @@ var (
 		},
 	}
 
-	AddLabel = &cli.Command{
-		Name:      "label",
-		Usage:     "Create or configure an existing label",
-		ArgsUsage: "[name]",
-		Aliases:   []string{"t"},
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:    "color",
-				Aliases: []string{"c"},
-				Usage:   "provide a HEX color for the label",
-			},
-		},
-		Action: func(ctx *cli.Context) error {
-			if !ctx.Args().Present() {
-				return ErrNoArgs
-			}
-
-			name := ctx.Args().First()
-			color := ctx.String("color")
-
-			db, err := database.New()
-			if err != nil {
-				return err
-			}
-
-			label, err := db.AddLabel(name, color)
-			if err != nil {
-				return err
-			}
-
-			log.Printf("label '%+v' edited", label)
-
-			return nil
-		},
-	}
-
-	RemoveLabel = &cli.Command{
+	removeLabel = &cli.Command{
 		Name:      "label",
 		Usage:     "Remove a label from the storage",
 		ArgsUsage: "[name]",
