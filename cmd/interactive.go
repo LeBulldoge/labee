@@ -9,6 +9,8 @@ import (
 	"github.com/gookit/color"
 )
 
+var errFzfReturn = errors.New("exit status 130")
+
 func openInteractiveMode(strs []string, preview string) error {
 	cmd := exec.Command("fzf", "-m", "--ansi", "--height", "40%", "--border", "--preview", preview)
 
@@ -31,8 +33,9 @@ func openInteractiveMode(strs []string, preview string) error {
 	}
 
 	err = cmd.Wait()
-	if err != nil && err.Error() != "exit status 130" {
-		color.Danger.Println(err)
+	// !TODO: better way to check against the exit code
+	if err != nil && err.Error() == errFzfReturn.Error() {
+		return err
 	}
 
 	return nil
