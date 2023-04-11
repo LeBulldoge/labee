@@ -75,7 +75,7 @@ func tx(db *sqlx.DB, ctx context.Context, f func(context.Context, *sqlx.Tx) erro
 func (m *DB) GetFileLabels(path string) ([]Label, error) {
 	stmt :=
 		`SELECT Label.* FROM Label, File
-    LEFT JOIN FileInfo ON
+    JOIN FileInfo ON
     Label.id = FileInfo.labelId AND
     FileInfo.fileId = File.id
     WHERE File.path = $1`
