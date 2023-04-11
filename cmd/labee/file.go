@@ -116,19 +116,13 @@ var (
 		},
 	}
 
-	quiet   = false
 	AddFile = &cli.Command{
 		Name:      "file",
 		Usage:     "Add a new file into the storage or add labels to existing files",
 		ArgsUsage: "[path to file]",
 		Aliases:   []string{"f"},
 		Flags: []cli.Flag{
-			&cli.BoolFlag{
-				Name:        "quiet",
-				Aliases:     []string{"q"},
-				Usage:       "Mute output",
-				Destination: &quiet,
-			},
+			flagQuiet,
 			&cli.StringSliceFlag{
 				Name:    "labels",
 				Aliases: []string{"l"},

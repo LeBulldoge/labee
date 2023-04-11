@@ -65,12 +65,7 @@ func main() {
 				ArgsUsage: "[subcommand]",
 				Aliases:   []string{"a"},
 				Flags: []cli.Flag{
-					&cli.BoolFlag{
-						Name:        "quiet",
-						Aliases:     []string{"q"},
-						Usage:       "Mute output",
-						Destination: &quiet,
-					},
+					flagQuiet,
 					&cli.StringSliceFlag{
 						Name:    "labels",
 						Aliases: []string{"l"},
@@ -147,7 +142,6 @@ func main() {
 				Usage:   "Edit items in the storage",
 				Aliases: []string{"e"},
 				Subcommands: []*cli.Command{
-					RemoveFile,
 					EditLabel,
 				},
 			},
