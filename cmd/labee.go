@@ -14,7 +14,7 @@ import (
 )
 
 func openInteractiveMode(strs []string, preview string) error {
-	cmd := exec.Command("fzf", "--ansi", "--height", "40%", "--border", "--preview", preview)
+	cmd := exec.Command("fzf", "-m", "--ansi", "--height", "40%", "--border", "--preview", preview)
 
 	pipe, err := cmd.StdinPipe()
 	if err != nil {
