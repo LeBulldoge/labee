@@ -65,60 +65,49 @@ func Run() {
 						Usage:   "Add comma separated labels to the file [-l \"labelA, labelB\"]. Creates labels if they don't exist",
 					},
 				},
-				Action: func(ctx *cli.Context) error {
-					var filepaths []string
-
-					if !ctx.Args().Present() {
-						if !pipeArgsAvailable() {
+				Action: defaultActionWrapper(
+					func(ctx *cli.Context, args []string, db *database.DB) error {
+						if len(args) == 0 {
 							return ErrNoArgs
 						}
-						filepaths = readPipeArgs()
-					} else {
-						filepaths = ctx.Args().Slice()
-					}
 
-					db, err := database.New()
-					if err != nil {
-						return err
-					}
+						labelNames := ctx.StringSlice("labels")
 
-					labelNames := ctx.StringSlice("labels")
+						var absPaths []string
+						for _, v := range args {
+							_, err := os.Stat(v)
+							if err != nil {
+								return fmt.Errorf("file %s does not exist", v)
+							}
 
-					var absPaths []string
-					for _, v := range filepaths {
-						_, err := os.Stat(v)
-						if err != nil {
-							return fmt.Errorf("file %s does not exist", v)
+							path, err := filepath.Abs(v)
+							if err != nil {
+								return err
+							}
+
+							absPaths = append(absPaths, path)
 						}
 
-						path, err := filepath.Abs(v)
+						err := db.AddFilesAndLinks(absPaths, labelNames)
 						if err != nil {
 							return err
 						}
 
-						absPaths = append(absPaths, path)
-					}
+						if quiet {
+							return nil
+						}
 
-					err = db.AddFilesAndLinks(absPaths, labelNames)
-					if err != nil {
-						return err
-					}
+						for _, path := range absPaths {
+							labels, err := db.GetFileLabels(path)
+							if err != nil {
+								return err
+							}
+							fmt.Println("New file added:")
+							printFileInfo(path, labels)
+						}
 
-					if quiet {
 						return nil
-					}
-
-					for _, path := range absPaths {
-						labels, err := db.GetFileLabels(path)
-						if err != nil {
-							return err
-						}
-						fmt.Println("New file added:")
-						printFileInfo(path, labels)
-					}
-
-					return nil
-				},
+					}),
 			},
 			{
 				Name:      "remove",
