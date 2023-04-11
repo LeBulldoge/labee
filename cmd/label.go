@@ -12,15 +12,6 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func openInteractiveLabelMode(labels []database.Label) error {
-	strs := []string{}
-	for _, t := range labels {
-		strs = append(strs, color.HEX(t.Color.String).Sprint(t.Name))
-	}
-
-	return openInteractiveMode(strs, "labee q l {}")
-}
-
 const (
 	ColorNone = "none"
 )
@@ -48,9 +39,10 @@ func colorize(str string, hexColor string) (string, error) {
 
 var (
 	queryLabel = &cli.Command{
-		Name:    "label",
-		Usage:   "Find files by their labels",
-		Aliases: []string{"l"},
+		Name:      "label",
+		Usage:     "Find files by their labels",
+		ArgsUsage: "[LABEL...]",
+		Aliases:   []string{"l"},
 		Flags: []cli.Flag{
 			flagInteractive,
 			&cli.BoolFlag{
@@ -101,10 +93,10 @@ var (
 				return ErrNoArgs
 			}
 
-			for _, v := range args {
-				if !db.LabelExists(v) {
-					e := fmt.Errorf("label '%s' does not exist", v)
-					similar := db.GetSimilarLabel(v)
+			for _, arg := range args {
+				if !db.LabelExists(arg) {
+					e := fmt.Errorf("label '%s' does not exist", arg)
+					similar := db.GetSimilarLabel(arg)
 					if similar != nil {
 						cl, _ := colorize(similar.Name, similar.Color.String)
 						e = fmt.Errorf("%w. did you mean '%s'?", e, cl)
@@ -163,7 +155,7 @@ var (
 		},
 	}
 
-	EditLabel = &cli.Command{
+	editLabel = &cli.Command{
 		Name:      "label",
 		Usage:     "Edit a label",
 		ArgsUsage: "[label to edit]",

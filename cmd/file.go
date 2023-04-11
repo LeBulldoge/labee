@@ -11,14 +11,6 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func openInteractiveFileMode(files []database.File) error {
-	strs := []string{}
-	for _, f := range files {
-		strs = append(strs, f.Path)
-	}
-	return openInteractiveMode(strs, "labee q f {}")
-}
-
 func printFileInfo(file string, labels []database.Label) {
 	color.Tag("us").Println(file)
 

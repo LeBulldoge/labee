@@ -22,5 +22,5 @@ func readPipeArgs() (pipeArgs []string) {
 		pipeArgs = append(pipeArgs, scanner.Text())
 	}
 
-	return
+	return pipeArgs
 }
