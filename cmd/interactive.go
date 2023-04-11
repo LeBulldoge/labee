@@ -34,7 +34,7 @@ func openInteractiveMode(strs []string, preview string) error {
 
 	err = cmd.Wait()
 	// !TODO: better way to check against the exit code
-	if err != nil && err.Error() == errFzfReturn.Error() {
+	if err != nil && err.Error() != errFzfReturn.Error() {
 		return err
 	}
 
