@@ -1,8 +1,9 @@
 package labee
 
 import (
-	"errors"
 	"fmt"
+	"log"
+	"path/filepath"
 	"strings"
 
 	"github.com/LeBulldoge/labee/internal/database"
@@ -100,18 +101,21 @@ func removeFileAction(_ *cli.Context, args []string, db *database.DB) error {
 		return ErrNoArgs
 	}
 
-	var errs error
-	for i := 0; i < len(args); i++ {
-		err := db.DeleteFile_b(args[i])
-		fmt.Printf("%s removed", args[i])
+	var paths []string
+	for _, arg := range args {
+		path, err := filepath.Abs(arg)
 		if err != nil {
-			errs = errors.Join(errs, err)
+			return err
 		}
+		paths = append(paths, path)
 	}
 
-	if errs != nil {
-		return errs
+	err := db.DeleteFiles(paths)
+	if err != nil {
+		return err
 	}
+
+	log.Printf("files %v removed", paths)
 
 	return nil
 }

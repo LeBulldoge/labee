@@ -16,18 +16,36 @@ type File struct {
 	Path string `db:"path"`
 }
 
-func (m *DB) DeleteFile_b(path string) error {
-	stmt := `DELETE FROM File WHERE path = '%s'`
+func (m *DB) DeleteFiles(paths []string) error {
+	err := tx(m.db, context.TODO(), func(ctx context.Context, tx *sqlx.Tx) error {
+		for _, v := range paths {
+			err := deleteFile(tx, ctx, v)
+			if err != nil {
+				return err
+			}
+		}
 
-	_, err := m.db.Exec(fmt.Sprintf(stmt, path))
+		return nil
+	})
 
 	return err
 }
 
-func DeleteFile(tx *sqlx.Tx, ctx context.Context, path string) error {
+var ErrCouldNotDeleteFile = errors.New("could not delete file")
+
+func deleteFile(tx *sqlx.Tx, ctx context.Context, path string) error {
 	stmt := `DELETE FROM File WHERE path = ?`
 
-	_, err := tx.ExecContext(ctx, stmt, path)
+	res, err := tx.ExecContext(ctx, stmt, path)
+	if err != nil {
+		return fmt.Errorf("%w %s: %w", ErrCouldNotDeleteFile, path, err)
+	}
+
+	if cnt, err := res.RowsAffected(); err != nil {
+		return fmt.Errorf("%w %s: %w", ErrCouldNotDeleteFile, path, err)
+	} else if cnt == 0 {
+		return fmt.Errorf("%w %s. file doesn't exist in storage", ErrCouldNotDeleteFile, path)
+	}
 
 	return err
 }
