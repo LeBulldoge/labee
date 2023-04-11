@@ -10,4 +10,12 @@ var (
 		Usage:       "Mute output",
 		Destination: &quiet,
 	}
+
+	interactive     = false
+	flagInteractive = &cli.BoolFlag{
+		Name:        "interactive",
+		Aliases:     []string{"i"},
+		Usage:       "Open an interactive view via fzf",
+		Destination: &interactive,
+	}
 )

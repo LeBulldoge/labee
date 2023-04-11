@@ -52,15 +52,11 @@ var (
 		Usage:   "Find files by their labels",
 		Aliases: []string{"l"},
 		Flags: []cli.Flag{
+			flagInteractive,
 			&cli.BoolFlag{
 				Name:    "all",
 				Aliases: []string{"a"},
 				Usage:   "Show all available labels",
-			},
-			&cli.BoolFlag{
-				Name:    "interactive",
-				Aliases: []string{"i"},
-				Usage:   "Open an interactive view via fzf",
 			},
 		},
 		Action: func(ctx *cli.Context) error {
@@ -82,7 +78,7 @@ var (
 					return errors.New("no files found")
 				}
 
-				if ctx.Bool("interactive") {
+				if interactive {
 					return openInteractiveLabelMode(labels)
 				}
 
@@ -125,7 +121,7 @@ var (
 				return errors.New("no files found")
 			}
 
-			if ctx.Bool("interactive") {
+			if interactive {
 				return openInteractiveFileMode(files)
 			}
 

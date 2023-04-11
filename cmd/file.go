@@ -44,15 +44,11 @@ var (
 		Aliases:   []string{"f"},
 		ArgsUsage: "[keywords]",
 		Flags: []cli.Flag{
+			flagInteractive,
 			&cli.BoolFlag{
 				Name:    "all",
 				Aliases: []string{"a"},
 				Usage:   "Show all matches or, if no arguments are provided, all files in the storage",
-			},
-			&cli.BoolFlag{
-				Name:    "interactive",
-				Aliases: []string{"i"},
-				Usage:   "Open an interactive view via fzf",
 			},
 		},
 		Action: func(ctx *cli.Context) error {
@@ -73,7 +69,7 @@ var (
 					return fmt.Errorf("no files found in storage")
 				}
 
-				if ctx.Bool("interactive") {
+				if interactive {
 					return openInteractiveFileMode(files)
 				}
 
@@ -97,7 +93,7 @@ var (
 				return err
 			}
 
-			if ctx.Bool("interactive") {
+			if interactive {
 				return openInteractiveFileMode(files)
 			}
 
