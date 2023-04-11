@@ -1,8 +1,12 @@
-# Labee
-Buzz around your files using labels!
+<div align="center">
+
+# labee
+Buzz around your files using labels! 🐝
+
+</div>
 
 Labee is a command-line tool that can be used to attach labels to your files.
-Query the storage for the files with label names for fast access and easy integration with other tools via pipelines.
+This allows for grouping related files together, easy access and integration with your favorite CLI tools.
 
 ```sh
 labee add -l TODO item.txt                  # add a file to the storage and attach the label 'TODO' to it
