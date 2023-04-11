@@ -10,6 +10,31 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+type defaultAction func(ctx *cli.Context, args []string, db *database.DB) error
+
+// Parses arguments from context and pipe, creates a DB connection,
+// passes them on to the enclosed function.
+func defaultActionWrapper(action defaultAction) cli.ActionFunc {
+	return func(ctx *cli.Context) error {
+		db, err := database.New()
+		if err != nil {
+			return fmt.Errorf("error initializing database connection: %w", err)
+		}
+
+		var args []string
+
+		if ctx.Args().Present() {
+			args = ctx.Args().Slice()
+		}
+
+		if pipeArgsAvailable() {
+			args = append(args, readPipeArgs()...)
+		}
+
+		return action(ctx, args, db)
+	}
+}
+
 func Run() {
 	app := &cli.App{
 		Name:                   "labee",
