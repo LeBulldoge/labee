@@ -15,9 +15,10 @@ func pipeArgsAvailable() bool {
 	return (stat.Mode() & os.ModeCharDevice) == 0
 }
 
-func readPipeArgs() (pipeArgs []string) {
+func readPipeArgs() []string {
 	scanner := bufio.NewScanner(os.Stdin)
 
+	var pipeArgs []string
 	for scanner.Scan() {
 		pipeArgs = append(pipeArgs, scanner.Text())
 	}

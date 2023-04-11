@@ -3,7 +3,6 @@ package labee
 import (
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/LeBulldoge/labee/internal/database"
@@ -29,111 +28,90 @@ func printFileInfo(file string, labels []database.Label) {
 	color.Println(strings.Join(cLabels, ", ") + "\n")
 }
 
-var (
-	queryFile = &cli.Command{
-		Name:      "file",
-		Usage:     "Query by file",
-		Aliases:   []string{"f"},
-		ArgsUsage: "[keywords]",
-		Flags: []cli.Flag{
-			flagInteractive,
-			&cli.BoolFlag{
-				Name:    "all",
-				Aliases: []string{"a"},
-				Usage:   "Show all matches or, if no arguments are provided, all files in the storage",
-			},
+var queryFile = &cli.Command{
+	Name:      "file",
+	Usage:     "Find a file in storage via keywords",
+	Aliases:   []string{"f"},
+	ArgsUsage: "[keywords]",
+	Flags: []cli.Flag{
+		flagInteractive,
+		&cli.BoolFlag{
+			Name:    "all",
+			Aliases: []string{"a"},
+			Usage:   "Show all matches or, if no arguments are provided, all files in the storage",
 		},
-		Action: func(ctx *cli.Context) error {
-			db, err := database.New()
-			if err != nil {
-				return nil
-			}
+	},
+	Action: defaultActionWrapper(queryFileAction),
+}
 
-			args := ctx.Args().Slice()
+func queryFileAction(ctx *cli.Context, args []string, db *database.DB) error {
+	if ctx.Bool("all") {
+		files, err := db.GetFiles(args)
+		if err != nil {
+			return err
+		}
 
-			if ctx.Bool("all") {
-				files, err := db.GetFiles(args)
-				if err != nil {
-					return err
-				}
+		if interactive {
+			return openInteractiveFileMode(files)
+		}
 
-				if len(files) == 0 {
-					return fmt.Errorf("no files found in storage")
-				}
+		for _, f := range files {
+			fmt.Println(f.Path)
+		}
 
-				if interactive {
-					return openInteractiveFileMode(files)
-				}
-
-				for _, f := range files {
-					fmt.Println(f.Path)
-				}
-
-				return nil
-			}
-
-			if pipeArgsAvailable() {
-				args = append(args, readPipeArgs()...)
-			}
-
-			if len(args) == 0 {
-				return ErrNoArgs
-			}
-
-			files, err := db.GetFiles(args)
-			if err != nil {
-				return err
-			}
-
-			if interactive {
-				return openInteractiveFileMode(files)
-			}
-
-			file := files[0].Path
-
-			labels, err := db.GetFileLabels(file)
-			if err != nil {
-				return fmt.Errorf("%s not found in the storage: %w", file, err)
-			}
-
-			printFileInfo(file, labels)
-
-			return nil
-		},
+		return nil
 	}
 
-	removeFile = &cli.Command{
-		Name:      "file",
-		Usage:     "Remove file(s) from the storage",
-		ArgsUsage: "[absolute paths]",
-		Aliases:   []string{"f"},
-		Action: func(ctx *cli.Context) error {
-			if ctx.Args().Present() {
-				return ErrNoArgs
-			}
-
-			db, err := database.New()
-			if err != nil {
-				return err
-			}
-
-			args := ctx.Args().Slice()
-
-			var errs error
-			for i := 0; i < len(args); i++ {
-				err := db.DeleteFile_b(args[i])
-				if err != nil {
-					errs = errors.Join(errs, err)
-				}
-			}
-
-			if errs != nil {
-				return errs
-			}
-
-			log.Println("File removed")
-
-			return nil
-		},
+	if len(args) == 0 {
+		return ErrNoArgs
 	}
-)
+
+	files, err := db.GetFiles(args)
+	if err != nil {
+		return err
+	}
+
+	if interactive {
+		return openInteractiveFileMode(files)
+	}
+
+	file := files[0].Path
+
+	labels, err := db.GetFileLabels(file)
+	if err != nil {
+		return fmt.Errorf("could not find labels for file %s: %w", file, err)
+	}
+
+	printFileInfo(file, labels)
+
+	return nil
+}
+
+var removeFile = &cli.Command{
+	Name:      "file",
+	Usage:     "Remove file(s) from the storage",
+	ArgsUsage: "[absolute paths]",
+	Aliases:   []string{"f"},
+	Action:    defaultActionWrapper(removeFileAction),
+}
+
+func removeFileAction(_ *cli.Context, args []string, db *database.DB) error {
+	if len(args) == 0 {
+		return ErrNoArgs
+	}
+
+	var errs error
+	for i := 0; i < len(args); i++ {
+		err := db.DeleteFile_b(args[i])
+		fmt.Printf("%s removed", args[i])
+		if err != nil {
+			errs = errors.Join(errs, err)
+		}
+	}
+
+	if errs != nil {
+		return errs
+	}
+
+	return nil
+}
