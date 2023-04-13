@@ -7,6 +7,8 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+const targetVersion = 1
+
 func Migrate(ctx context.Context, tx *sqlx.Tx) error {
 	curVersion := -1
 	err := tx.GetContext(ctx, &curVersion, "PRAGMA user_version")
@@ -14,9 +16,29 @@ func Migrate(ctx context.Context, tx *sqlx.Tx) error {
 		return err
 	}
 
+	if curVersion < targetVersion {
+		err = migrateUp(ctx, tx, curVersion)
+		if err != nil {
+			return err
+		}
+	} else if curVersion > targetVersion {
+		err = migrateDown(ctx, tx, curVersion)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func migrateUp(ctx context.Context, tx *sqlx.Tx, curVersion int) error {
 	for v := curVersion + 1; v <= len(versionMap); v++ {
-		migration := versionMap[v]
-		err = migration(ctx, tx)
+		migration := versionMap[v]()
+		if migration.up == nil {
+			return fmt.Errorf("cannot migrate database further up than v%d, should never happen", v)
+		}
+
+		err := migration.up(ctx, tx)
 		if err != nil {
 			return fmt.Errorf("error migrating database from v%d to v%d: %w", curVersion, v, err)
 		}
@@ -25,12 +47,35 @@ func Migrate(ctx context.Context, tx *sqlx.Tx) error {
 	return nil
 }
 
-var versionMap = map[int](func(context.Context, *sqlx.Tx) error){
+func migrateDown(ctx context.Context, tx *sqlx.Tx, curVersion int) error {
+	for v := curVersion; v > targetVersion; v-- {
+		migration := versionMap[v]()
+		if migration.down == nil {
+			return fmt.Errorf("cannot migrate database further down than v%d", v)
+		}
+
+		err := migration.down(ctx, tx)
+		if err != nil {
+			return fmt.Errorf("error migrating database from v%d to v%d: %w", curVersion, v, err)
+		}
+	}
+
+	return nil
+}
+
+type migration struct {
+	up   func(context.Context, *sqlx.Tx) error
+	down func(context.Context, *sqlx.Tx) error
+}
+
+var versionMap = map[int](func() migration){
 	1: version1,
 }
 
-func version1(ctx context.Context, tx *sqlx.Tx) error {
-	const schema = `CREATE TABLE File (
+func version1() migration {
+	up := func(ctx context.Context, tx *sqlx.Tx) error {
+
+		const schema = `CREATE TABLE File (
   id    INTEGER NOT NULL
                 UNIQUE,
   path  TEXT    NOT NULL
@@ -70,15 +115,18 @@ CREATE TABLE Label (
   )
 );`
 
-	_, err := tx.ExecContext(ctx, schema)
-	if err != nil {
-		return err
+		_, err := tx.ExecContext(ctx, schema)
+		if err != nil {
+			return err
+		}
+
+		_, err = tx.ExecContext(ctx, "PRAGMA user_version = 1")
+		if err != nil {
+			return err
+		}
+
+		return nil
 	}
 
-	_, err = tx.ExecContext(ctx, "PRAGMA user_version = 1")
-	if err != nil {
-		return err
-	}
-
-	return err
+	return migration{up: up}
 }
