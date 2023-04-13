@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -44,7 +45,7 @@ func getLabelId(db *sqlx.DB, name string) (int64, error) {
 func (m *DB) AddLabel(name string, color string) (*Label, error) {
 	var result *Label
 	err := tx(m.db, context.TODO(), func(ctx context.Context, tx *sqlx.Tx) error {
-		label, err := getOrInsertLabel(tx, ctx, name)
+		label, err := getOrInsertLabel(ctx, tx, name)
 		if err != nil {
 			return err
 		}
@@ -80,19 +81,30 @@ func (m *DB) DeleteLabel(name string) error {
 	return err
 }
 
-func getOrInsertLabel(tx *sqlx.Tx, ctx context.Context, name string) (*Label, error) {
-	var label Label
-	err := tx.GetContext(ctx, &label, `SELECT * FROM Label WHERE name = ?`, name)
-	if err == nil {
-		return &label, nil
+func insertLabel(ctx context.Context, tx *sqlx.Tx, name string) (int64, error) {
+	res, err := tx.ExecContext(ctx, `INSERT INTO Label (name) VALUES (?)`, name)
+	if err != nil {
+		return -1, err
 	}
 
-	_, err = tx.ExecContext(ctx, `INSERT INTO Label (name) VALUES (?)`, name)
+	return res.LastInsertId()
+}
+
+func getOrInsertLabel(ctx context.Context, tx *sqlx.Tx, name string) (*Label, error) {
+	var label Label
+	err := tx.GetContext(ctx, &label, `SELECT * FROM Label WHERE name = ?`, name)
+	if err == nil || errors.Is(err, sql.ErrNoRows) {
+		return &label, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	id, err := insertLabel(ctx, tx, name)
 	if err != nil {
 		return nil, err
 	}
 
-	err = tx.GetContext(ctx, &label, `SELECT * FROM Label WHERE name = ?`, name)
+	label = Label{Id: id, Name: name}
 
 	return &label, err
 }

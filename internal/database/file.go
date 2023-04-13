@@ -125,7 +125,7 @@ func (m *DB) AddFilesAndLinks(filepaths []string, labelNames []string) error {
 	err := tx(m.db, context.TODO(), func(ctx context.Context, tx *sqlx.Tx) error {
 		var labelIds []int64
 		for _, name := range labelNames {
-			label, err := getOrInsertLabel(tx, ctx, name)
+			label, err := getOrInsertLabel(ctx, tx, name)
 			if err != nil {
 				return err
 			}
