@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	ColorNone = "none"
+	colorNone = "none"
 )
 
 func isValidColor(hexColor string) (bool, error) {
@@ -21,7 +21,7 @@ func isValidColor(hexColor string) (bool, error) {
 }
 
 func colorize(str string, hexColor string) (string, error) {
-	if hexColor == ColorNone || hexColor == "" {
+	if hexColor == colorNone || hexColor == "" {
 		return str, nil
 	}
 
