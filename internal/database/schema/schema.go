@@ -1,4 +1,4 @@
-package database
+package schema
 
 import (
 	"context"
@@ -47,12 +47,12 @@ CREATE TABLE Label (
   )
 );`
 
-func applySchema(ctx context.Context, tx *sqlx.Tx) error {
+func ApplySchema(ctx context.Context, tx *sqlx.Tx) error {
 	_, err := tx.ExecContext(ctx, schema)
 	return err
 }
 
-func checkIfSchemaDiffers(ctx context.Context, tx *sqlx.Tx) (bool, error) {
+func CheckIfSchemaDiffers(ctx context.Context, tx *sqlx.Tx) (bool, error) {
 	stmt := `
 SELECT sql FROM sqlite_master WHERE
     type = 'table' AND

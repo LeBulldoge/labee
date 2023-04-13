@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/LeBulldoge/labee/internal/database/schema"
 	"github.com/LeBulldoge/labee/internal/os"
 	"github.com/jmoiron/sqlx"
 	_ "modernc.org/sqlite"
@@ -35,13 +36,13 @@ func New() (*DB, error) {
 	db.SetMaxOpenConns(1)
 
 	err = tx(db, context.TODO(), func(ctx context.Context, tx *sqlx.Tx) error {
-		needSchemaUpdate, err := checkIfSchemaDiffers(ctx, tx)
+		needSchemaUpdate, err := schema.CheckIfSchemaDiffers(ctx, tx)
 		if err != nil {
 			return err
 		}
 
 		if needSchemaUpdate {
-			err := applySchema(ctx, tx)
+			err := schema.ApplySchema(ctx, tx)
 			if err != nil {
 				return fmt.Errorf("TODO: database at %s is out of date: %w", dbPath, err)
 			}
