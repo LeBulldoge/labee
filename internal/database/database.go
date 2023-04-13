@@ -35,13 +35,16 @@ func New() (*DB, error) {
 	db.SetMaxOpenConns(1)
 
 	err = tx(db, context.TODO(), func(ctx context.Context, tx *sqlx.Tx) error {
-		needSchemaUpdate, err := checkIfSchemaEmpty(ctx, tx)
+		needSchemaUpdate, err := checkIfSchemaDiffers(ctx, tx)
 		if err != nil {
 			return err
 		}
 
 		if needSchemaUpdate {
-			return applySchema(ctx, tx)
+			err := applySchema(ctx, tx)
+			if err != nil {
+				return fmt.Errorf("TODO: database at %s is out of date: %w", dbPath, err)
+			}
 		}
 
 		return nil
@@ -100,10 +103,12 @@ func (m *DB) LabelExists(name string) bool {
 }
 
 func (m *DB) GetSimilarLabel(name string) *Label {
+	letters := strings.Join(strings.Split(name, ""), "%")
+
 	var label Label
 	err := m.db.Get(&label,
 		`SELECT name, color FROM Label
-        WHERE name LIKE '%`+name+"%'")
+        WHERE name LIKE '%`+letters+"%'")
 
 	if err != nil {
 		return nil

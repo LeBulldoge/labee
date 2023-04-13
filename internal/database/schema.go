@@ -7,7 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-const SCHEMA = `CREATE TABLE File (
+const schema = `CREATE TABLE File (
   id    INTEGER NOT NULL
                 UNIQUE,
   path  TEXT    NOT NULL
@@ -48,11 +48,11 @@ CREATE TABLE Label (
 );`
 
 func applySchema(ctx context.Context, tx *sqlx.Tx) error {
-	_, err := tx.ExecContext(ctx, SCHEMA)
+	_, err := tx.ExecContext(ctx, schema)
 	return err
 }
 
-func checkIfSchemaEmpty(ctx context.Context, tx *sqlx.Tx) (bool, error) {
+func checkIfSchemaDiffers(ctx context.Context, tx *sqlx.Tx) (bool, error) {
 	stmt := `
 SELECT sql FROM sqlite_master WHERE
     type = 'table' AND
@@ -77,5 +77,5 @@ ORDER BY name`
 
 	curSchema := strings.Join(stmts, "\n\n")
 
-	return SCHEMA != curSchema, nil
+	return schema != curSchema, nil
 }
