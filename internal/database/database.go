@@ -36,15 +36,17 @@ func New() (*DB, error) {
 	db.SetMaxOpenConns(1)
 
 	err = tx(db, context.TODO(), func(ctx context.Context, tx *sqlx.Tx) error {
+		//err := schema.ApplySchema(ctx, tx)
+
 		needSchemaUpdate, err := schema.CheckIfSchemaDiffers(ctx, tx)
 		if err != nil {
 			return err
 		}
 
 		if needSchemaUpdate {
-			err := schema.ApplySchema(ctx, tx)
+			err := schema.Migrate(ctx, tx)
 			if err != nil {
-				return fmt.Errorf("TODO: database at %s is out of date: %w", dbPath, err)
+				return err
 			}
 		}
 
