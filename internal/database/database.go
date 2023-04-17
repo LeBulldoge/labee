@@ -17,6 +17,8 @@ type DB struct {
 	db *sqlx.DB
 }
 
+const targetVersion = 1
+
 func New() (*DB, error) {
 	config := os.ConfigPath()
 	dbPath := filepath.Join(config, "storage.db")
@@ -36,15 +38,15 @@ func New() (*DB, error) {
 	db.SetMaxOpenConns(1)
 
 	err = tx(db, context.TODO(), func(ctx context.Context, tx *sqlx.Tx) error {
-		//err := schema.ApplySchema(ctx, tx)
-
-		needSchemaUpdate, err := schema.CheckIfSchemaDiffers(ctx, tx)
+		curVersion, err := schema.CurrentVersion(ctx, tx)
 		if err != nil {
 			return err
 		}
 
+		needSchemaUpdate := curVersion != targetVersion
+
 		if needSchemaUpdate {
-			err := schema.Migrate(ctx, tx)
+			err := schema.ApplyMigrations(ctx, tx, curVersion, targetVersion)
 			if err != nil {
 				return err
 			}

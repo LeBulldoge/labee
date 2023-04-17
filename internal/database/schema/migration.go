@@ -3,36 +3,47 @@ package schema
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/jmoiron/sqlx"
 )
 
-const targetVersion = 1
-
-func Migrate(ctx context.Context, tx *sqlx.Tx) error {
+func CurrentVersion(ctx context.Context, tx *sqlx.Tx) (int, error) {
 	curVersion := -1
 	err := tx.GetContext(ctx, &curVersion, "PRAGMA user_version")
 	if err != nil {
-		return err
+		return curVersion, err
 	}
 
-	if curVersion < targetVersion {
-		err = migrateUp(ctx, tx, curVersion)
-		if err != nil {
-			return err
-		}
-	} else if curVersion > targetVersion {
-		err = migrateDown(ctx, tx, curVersion)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return curVersion, err
 }
 
-func migrateUp(ctx context.Context, tx *sqlx.Tx, curVersion int) error {
-	for v := curVersion + 1; v <= len(versionMap); v++ {
+func setVersion(ctx context.Context, tx *sqlx.Tx, version int) error {
+	_, err := tx.ExecContext(ctx, "PRAGMA user_version = "+strconv.Itoa(version))
+
+	return err
+}
+
+func ApplyMigrations(ctx context.Context, tx *sqlx.Tx, fromVer int, toVer int) error {
+	if fromVer < toVer {
+		err := migrateUp(ctx, tx, fromVer, toVer)
+		if err != nil {
+			return err
+		}
+	} else if fromVer > toVer {
+		err := migrateDown(ctx, tx, fromVer, toVer)
+		if err != nil {
+			return err
+		}
+	} else {
+		return nil
+	}
+
+	return setVersion(ctx, tx, toVer)
+}
+
+func migrateUp(ctx context.Context, tx *sqlx.Tx, curVersion int, targetVersion int) error {
+	for v := curVersion + 1; v <= targetVersion; v++ {
 		migration := versionMap[v]()
 		if migration.up == nil {
 			return fmt.Errorf("cannot migrate database further up than v%d, should never happen", v)
@@ -47,7 +58,7 @@ func migrateUp(ctx context.Context, tx *sqlx.Tx, curVersion int) error {
 	return nil
 }
 
-func migrateDown(ctx context.Context, tx *sqlx.Tx, curVersion int) error {
+func migrateDown(ctx context.Context, tx *sqlx.Tx, curVersion int, targetVersion int) error {
 	for v := curVersion; v > targetVersion; v-- {
 		migration := versionMap[v]()
 		if migration.down == nil {
@@ -72,6 +83,7 @@ var versionMap = map[int](func() migration){
 	1: version1,
 }
 
+// The initial schema
 func version1() migration {
 	up := func(ctx context.Context, tx *sqlx.Tx) error {
 
@@ -116,11 +128,6 @@ CREATE TABLE Label (
 );`
 
 		_, err := tx.ExecContext(ctx, schema)
-		if err != nil {
-			return err
-		}
-
-		_, err = tx.ExecContext(ctx, "PRAGMA user_version = 1")
 		if err != nil {
 			return err
 		}
