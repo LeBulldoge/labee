@@ -93,9 +93,9 @@ func insertLabel(ctx context.Context, tx *sqlx.Tx, name string) (int64, error) {
 func getOrInsertLabel(ctx context.Context, tx *sqlx.Tx, name string) (*Label, error) {
 	var label Label
 	err := tx.GetContext(ctx, &label, `SELECT * FROM Label WHERE name = ?`, name)
-	if err == nil || errors.Is(err, sql.ErrNoRows) {
+	if err == nil {
 		return &label, nil
-	} else if err != nil {
+	} else if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, err
 	}
 
