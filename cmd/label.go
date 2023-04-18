@@ -121,14 +121,18 @@ var queryLabel = &cli.Command{
 func areLabelsMissing(db *database.DB, labelNames []string) error {
 	var err error
 	for _, label := range labelNames {
-		if !db.LabelExists(label) {
-			e := fmt.Errorf("label '%s' does not exist", label)
+		if db.LabelExists(label) {
+			continue
+		}
+
+		e := fmt.Errorf("label '%s' does not exist", label)
+		if len(label) >= 3 {
 			if similar := db.GetSimilarLabel(label); similar != nil {
 				cl, _ := colorize(similar.Name, similar.Color.String)
 				e = fmt.Errorf("%w. did you mean '%s'?", e, cl)
 			}
-			err = errors.Join(err, e)
 		}
+		err = errors.Join(err, e)
 	}
 
 	return err
