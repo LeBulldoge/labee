@@ -10,29 +10,33 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+func beforeHook(ctx *cli.Context) error {
+	db, err := database.New()
+	if err != nil {
+		return err
+	}
+
+	ctx.Context = database.WithDatabase(ctx.Context, db)
+	return nil
+}
+
+func afterHook(ctx *cli.Context) error {
+	db, err := database.FromContext(ctx.Context)
+	if err != nil {
+		return err
+	}
+
+	return db.Close()
+}
+
 func Run() {
 	app := &cli.App{
 		Name:                   "labee",
 		Usage:                  "Buzz around your files using labels!",
 		UseShortOptionHandling: true,
 		EnableBashCompletion:   true,
-		Before: func(ctx *cli.Context) error {
-			db, err := database.New()
-			if err != nil {
-				return err
-			}
-
-			ctx.Context = database.WithDatabase(ctx.Context, db)
-			return nil
-		},
-		After: func(ctx *cli.Context) error {
-			db, err := database.FromContext(ctx.Context)
-			if err != nil {
-				return err
-			}
-
-			return db.Close()
-		},
+		Before:                 beforeHook,
+		After:                  afterHook,
 		Commands: []*cli.Command{
 			{
 				Name:      "query",
