@@ -42,10 +42,20 @@ var queryFile = &cli.Command{
 			Usage:   "Show all matches or, if no arguments are provided, all files in the storage",
 		},
 	},
-	Action: defaultActionWrapper(queryFileAction),
+	Action: queryFileAction,
 }
 
-func queryFileAction(ctx *cli.Context, args []string, db *database.DB) error {
+func queryFileAction(ctx *cli.Context) error {
+	args := ctx.Args().Slice()
+	if pipeArgsAvailable() {
+		args = append(args, readPipeArgs()...)
+	}
+
+	db, err := database.FromContext(ctx.Context)
+	if err != nil {
+		return err
+	}
+
 	if ctx.Bool("all") {
 		files, err := db.GetFiles(args)
 		if err != nil {
@@ -93,12 +103,22 @@ var removeFile = &cli.Command{
 	Usage:     "Remove file(s) from the storage",
 	ArgsUsage: "[absolute paths]",
 	Aliases:   []string{"f"},
-	Action:    defaultActionWrapper(removeFileAction),
+	Action:    removeFileAction,
 }
 
-func removeFileAction(_ *cli.Context, args []string, db *database.DB) error {
+func removeFileAction(ctx *cli.Context) error {
+	args := ctx.Args().Slice()
+	if pipeArgsAvailable() {
+		args = append(args, readPipeArgs()...)
+	}
+
 	if len(args) == 0 {
 		return ErrNoArgs
+	}
+
+	db, err := database.FromContext(ctx.Context)
+	if err != nil {
+		return err
 	}
 
 	var paths []string
@@ -110,7 +130,7 @@ func removeFileAction(_ *cli.Context, args []string, db *database.DB) error {
 		paths = append(paths, path)
 	}
 
-	err := db.DeleteFiles(paths)
+	err = db.DeleteFiles(paths)
 	if err != nil {
 		return err
 	}
