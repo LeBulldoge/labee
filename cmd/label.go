@@ -37,95 +37,103 @@ func colorize(str string, hexColor string) (string, error) {
 	return color.HEX(hexColor).Sprint(str), nil
 }
 
-var (
-	queryLabel = &cli.Command{
-		Name:      "label",
-		Usage:     "Find files by their labels",
-		ArgsUsage: "[LABEL...]",
-		Aliases:   []string{"l"},
-		Flags: []cli.Flag{
-			flagInteractive,
-			&cli.BoolFlag{
-				Name:    "all",
-				Aliases: []string{"a"},
-				Usage:   "Show all available labels",
-			},
+var queryLabel = &cli.Command{
+	Name:      "label",
+	Usage:     "Find files by their labels",
+	ArgsUsage: "[LABEL...]",
+	Aliases:   []string{"l"},
+	Flags: []cli.Flag{
+		flagInteractive,
+		&cli.BoolFlag{
+			Name:    "all",
+			Aliases: []string{"a"},
+			Usage:   "Show all available labels",
 		},
-		Action: func(ctx *cli.Context) error {
-			db, err := database.New()
+	},
+	Action: func(ctx *cli.Context) error {
+		db, err := database.New()
+		if err != nil {
+			return err
+		}
+
+		if ctx.Bool("all") {
+			labels, err := db.GetAllLabels()
 			if err != nil {
 				return err
 			}
 
-			args := []string{}
-			if ctx.Args().Present() {
-				args = ctx.Args().Slice()
-			} else if ctx.Bool("all") {
-				labels, err := db.GetAllLabels()
-				if err != nil {
-					return err
-				}
-
-				if len(labels) == 0 {
-					return errors.New("no files found")
-				}
-
-				if interactive {
-					return openInteractiveLabelMode(labels)
-				}
-
-				cLabels := []string{}
-				for _, t := range labels {
-					cl, err := colorize(t.Name, t.Color.String)
-					if err != nil {
-						return err
-					}
-
-					cLabels = append(cLabels, cl)
-				}
-
-				color.Println(strings.Join(cLabels, ", "))
-
-				return nil
-			} else if pipeArgsAvailable() {
-				args = append(args, readPipeArgs()...)
-			} else {
-				return ErrNoArgs
-			}
-
-			for _, arg := range args {
-				if !db.LabelExists(arg) {
-					e := fmt.Errorf("label '%s' does not exist", arg)
-					similar := db.GetSimilarLabel(arg)
-					if similar != nil {
-						cl, _ := colorize(similar.Name, similar.Color.String)
-						e = fmt.Errorf("%w. did you mean '%s'?", e, cl)
-					}
-					err = errors.Join(err, e)
-				}
-			}
-			if err != nil {
-				return err
-			}
-
-			files, err := db.GetFilesByLabels(args)
-			if err != nil {
+			if len(labels) == 0 {
 				return errors.New("no files found")
 			}
 
 			if interactive {
-				return openInteractiveFileMode(files)
+				return openInteractiveLabelMode(labels)
 			}
 
-			// Just print out the file paths
-			for _, f := range files {
-				fmt.Println(f.Path)
+			cLabels := []string{}
+			for _, t := range labels {
+				cl, err := colorize(t.Name, t.Color.String)
+				if err != nil {
+					return err
+				}
+
+				cLabels = append(cLabels, cl)
 			}
+
+			color.Println(strings.Join(cLabels, ", "))
 
 			return nil
-		},
+		}
+		args := []string{}
+		if ctx.Args().Present() {
+			args = ctx.Args().Slice()
+		}
+		if pipeArgsAvailable() {
+			args = append(args, readPipeArgs()...)
+		}
+		if len(args) == 0 {
+			return ErrNoArgs
+		}
+
+		if err := areLabelsMissing(db, args); err != nil {
+			return err
+		}
+
+		files, err := db.GetFilesByLabels(args)
+		if err != nil {
+			return errors.New("no files found")
+		}
+
+		if interactive {
+			return openInteractiveFileMode(files)
+		}
+
+		// Just print out the file paths
+		for _, f := range files {
+			fmt.Println(f.Path)
+		}
+
+		return nil
+	},
+}
+
+func areLabelsMissing(db *database.DB, labelNames []string) error {
+	var err error
+	for _, label := range labelNames {
+		if !db.LabelExists(label) {
+			e := fmt.Errorf("label '%s' does not exist", label)
+			if similar := db.GetSimilarLabel(label); similar != nil {
+				cl, _ := colorize(similar.Name, similar.Color.String)
+				e = fmt.Errorf("%w. did you mean '%s'?", e, cl)
+			}
+			err = errors.Join(err, e)
+		}
 	}
 
+	return err
+}
+
+var (
 	removeLabel = &cli.Command{
 		Name:      "label",
 		Usage:     "Remove a label from the storage",
