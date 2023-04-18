@@ -51,7 +51,7 @@ var queryLabel = &cli.Command{
 		},
 	},
 	Action: func(ctx *cli.Context) error {
-		db, err := database.New()
+		db, err := database.FromContext(ctx.Context)
 		if err != nil {
 			return err
 		}
@@ -84,6 +84,7 @@ var queryLabel = &cli.Command{
 
 			return nil
 		}
+
 		args := []string{}
 		if ctx.Args().Present() {
 			args = ctx.Args().Slice()
