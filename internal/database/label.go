@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -36,10 +37,47 @@ func (m *DB) GetAllLabels() ([]Label, error) {
 	return labels, nil
 }
 
+func (m *DB) GetFileLabels(path string) ([]Label, error) {
+	stmt :=
+		`SELECT Label.* FROM Label, File
+    JOIN FileInfo ON
+    Label.id = FileInfo.labelId AND
+    FileInfo.fileId = File.id
+    WHERE File.path = $1`
+
+	labels := []Label{}
+	err := m.db.Select(&labels, stmt, path)
+	if err != nil {
+		return nil, err
+	}
+
+	return labels, nil
+}
+
+func (m *DB) GetSimilarLabel(name string) *Label {
+	letters := strings.Join(strings.Split(name, ""), "%")
+
+	var label Label
+	err := m.db.Get(&label,
+		`SELECT name, color FROM Label
+        WHERE name LIKE '%`+letters+"%'")
+
+	if err != nil {
+		return nil
+	}
+
+	return &label
+}
+
 func getLabelId(db *sqlx.DB, name string) (int64, error) {
 	var id int64
 	err := db.Get(&id, "SELECT id FROM Label WHERE name = $1", name)
 	return id, err
+}
+
+func (m *DB) LabelExists(name string) bool {
+	_, err := getLabelId(m.db, name)
+	return err == nil
 }
 
 func (m *DB) AddLabel(name string, color string) (*Label, error) {

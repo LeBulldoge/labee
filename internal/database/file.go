@@ -94,6 +94,27 @@ func (m *DB) GetFiles(keywords []string) ([]File, error) {
 	return files, nil
 }
 
+func (m *DB) GetFilesByLabels(labels []string) ([]File, error) {
+	stmt := fmt.Sprintf(
+		`SELECT File.id, File.path
+      FROM File, Label
+      INNER JOIN FileInfo ON File.id  = FileInfo.fileId
+                         AND Label.id = FileInfo.labelId
+      WHERE Label.name IN ('%s')
+    GROUP BY File.path
+    HAVING COUNT(File.path) = %d`,
+		strings.Join(labels, "','"), len(labels),
+	)
+
+	files := []File{}
+	err := m.db.Select(&files, stmt)
+	if err != nil {
+		return nil, err
+	}
+
+	return files, nil
+}
+
 var (
 	ErrFileAlreadyExists = errors.New("file already exists in storage")
 	ErrFilesNotFound     = errors.New("couldn't find files")

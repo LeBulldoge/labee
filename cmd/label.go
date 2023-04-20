@@ -80,7 +80,7 @@ var queryLabel = &cli.Command{
 				cLabels = append(cLabels, cl)
 			}
 
-			color.Println(strings.Join(cLabels, ", "))
+			fmt.Println(strings.Join(cLabels, ", "))
 
 			return nil
 		}
