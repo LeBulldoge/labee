@@ -15,7 +15,7 @@ type DB struct {
 	db *sqlx.DB
 }
 
-const targetVersion = 1
+const targetVersion = 2
 
 func New() (*DB, error) {
 	config := os.ConfigPath()

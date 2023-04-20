@@ -81,6 +81,37 @@ type migration struct {
 
 var versionMap = map[int](func() migration){
 	1: version1,
+	2: version2,
+}
+
+// Add default value to color to not have to deal with sql NULLs
+func version2() migration {
+	up := func(ctx context.Context, tx *sqlx.Tx) error {
+		stmt := `ALTER TABLE Label RENAME TO Label_b;
+
+CREATE TABLE Label (
+  id    INTEGER NOT NULL
+                UNIQUE,
+  name  TEXT    NOT NULL
+                UNIQUE,
+  color TEXT    NOT NULL
+                DEFAULT 'NONE',
+  PRIMARY KEY (
+      id AUTOINCREMENT
+  )
+);
+
+UPDATE Label_b SET color = 'NONE' WHERE color IS NULL;
+INSERT INTO Label SELECT * FROM Label_b;
+
+DROP TABLE Label_b;`
+
+		_, err := tx.ExecContext(ctx, stmt)
+
+		return err
+	}
+
+	return migration{up: up}
 }
 
 // The initial schema

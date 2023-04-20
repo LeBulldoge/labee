@@ -44,7 +44,7 @@ func openInteractiveMode(strs []string, preview string) error {
 func openInteractiveLabelMode(labels []database.Label) error {
 	strs := []string{}
 	for _, t := range labels {
-		strs = append(strs, color.HEX(t.Color.String).Sprint(t.Name))
+		strs = append(strs, color.HEX(t.Color).Sprint(t.Name))
 	}
 
 	return openInteractiveMode(strs, "labee q l {}")

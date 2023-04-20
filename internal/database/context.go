@@ -16,7 +16,7 @@ func WithDatabase(ctx context.Context, db *DB) context.Context {
 func FromContext(ctx context.Context) (*DB, error) {
 	db, ok := ctx.Value(dbContextKey).(*DB)
 	if !ok {
-		return nil, fmt.Errorf("couldn't parse database from context")
+		return nil, fmt.Errorf("couldn't get database from context")
 	}
 
 	return db, nil

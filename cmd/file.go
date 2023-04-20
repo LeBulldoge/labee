@@ -23,7 +23,7 @@ func printFileInfo(file string, labels []database.Label) {
 
 	cLabels := []string{}
 	for _, t := range labels {
-		cLabels = append(cLabels, color.HEX(t.Color.String).Sprint(t.Name))
+		cLabels = append(cLabels, color.HEX(t.Color).Sprint(t.Name))
 	}
 
 	color.Println(strings.Join(cLabels, ", ") + "\n")

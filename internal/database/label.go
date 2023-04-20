@@ -10,9 +10,9 @@ import (
 )
 
 type Label struct {
-	Id    int64          `db:"id"`
-	Name  string         `db:"name"`
-	Color sql.NullString `db:"color"`
+	Id    int64  `db:"id"`
+	Name  string `db:"name"`
+	Color string `db:"color"`
 }
 
 func (m *DB) UpdateLabel(oldName string, newName string, newColor string) error {
@@ -88,7 +88,7 @@ func (m *DB) AddLabel(name string, color string) (*Label, error) {
 			return err
 		}
 
-		if label.Color.String == color {
+		if label.Color == color {
 			return nil
 		}
 
@@ -97,7 +97,7 @@ func (m *DB) AddLabel(name string, color string) (*Label, error) {
 			return err
 		}
 
-		label.Color.String = color
+		label.Color = color
 		result = label
 
 		return nil

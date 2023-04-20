@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	colorNone = "none"
+	colorNone = "NONE"
 )
 
 func isValidColor(hexColor string) (bool, error) {
@@ -72,7 +72,7 @@ var queryLabel = &cli.Command{
 
 			cLabels := []string{}
 			for _, t := range labels {
-				cl, err := colorize(t.Name, t.Color.String)
+				cl, err := colorize(t.Name, t.Color)
 				if err != nil {
 					return err
 				}
@@ -85,18 +85,16 @@ var queryLabel = &cli.Command{
 			return nil
 		}
 
-		args := []string{}
-		if ctx.Args().Present() {
-			args = ctx.Args().Slice()
-		}
+		args := ctx.Args().Slice()
 		if pipeArgsAvailable() {
 			args = append(args, readPipeArgs()...)
 		}
+
 		if len(args) == 0 {
 			return ErrNoArgs
 		}
 
-		if err := areLabelsMissing(db, args); err != nil {
+		if err := doLabelsExist(db, args); err != nil {
 			return err
 		}
 
@@ -118,7 +116,7 @@ var queryLabel = &cli.Command{
 	},
 }
 
-func areLabelsMissing(db *database.DB, labelNames []string) error {
+func doLabelsExist(db *database.DB, labelNames []string) error {
 	var err error
 	for _, label := range labelNames {
 		if db.LabelExists(label) {
@@ -128,7 +126,7 @@ func areLabelsMissing(db *database.DB, labelNames []string) error {
 		e := fmt.Errorf("label '%s' does not exist", label)
 		if len(label) >= 3 {
 			if similar := db.GetSimilarLabel(label); similar != nil {
-				cl, _ := colorize(similar.Name, similar.Color.String)
+				cl, _ := colorize(similar.Name, similar.Color)
 				e = fmt.Errorf("%w. did you mean '%s'?", e, cl)
 			}
 		}
