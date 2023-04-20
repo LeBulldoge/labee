@@ -18,19 +18,15 @@ func FileExists(path string) bool {
 }
 
 func CreatePath(path string) error {
-	dir, _ := filepath.Split(path)
-
-	if !FileExists(dir) {
-		err := os.Mkdir(dir, 0700)
-		if err != nil {
-			return err
-		}
-	}
-
-	_, err := os.Create(path)
+	err := os.MkdirAll(path, os.ModePerm)
 	if err != nil {
 		return err
 	}
 
-	return nil
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+
+	return file.Close()
 }
