@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"errors"
-	"fmt"
 	"path/filepath"
 
 	"github.com/LeBulldoge/labee/internal/database/schema"
@@ -70,23 +69,6 @@ func (m *DB) Close() error {
 	}
 
 	return m.db.Close()
-}
-
-type dbContextKeyType string
-
-const dbContextKey dbContextKeyType = "db"
-
-func WithDatabase(ctx context.Context, db *DB) context.Context {
-	return context.WithValue(ctx, dbContextKey, db)
-}
-
-func FromContext(ctx context.Context) (*DB, error) {
-	db, ok := ctx.Value(dbContextKey).(*DB)
-	if !ok {
-		return nil, fmt.Errorf("couldn't parse database from context")
-	}
-
-	return db, nil
 }
 
 func tx(db *sqlx.DB, ctx context.Context, f func(context.Context, *sqlx.Tx) error) error {
