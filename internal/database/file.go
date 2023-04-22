@@ -149,8 +149,6 @@ func (m *DB) GetFilesFiltered(pattern string, pathPrefix string) ([]File, error)
 		stmt += " WHERE " + filters
 	}
 
-	fmt.Printf("stmt: %v\n", stmt)
-
 	files := []File{}
 	err := m.db.Select(&files, stmt)
 	if err != nil {
