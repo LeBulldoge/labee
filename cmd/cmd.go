@@ -107,9 +107,6 @@ func Run() {
 				Usage:     "Print out information about the specified files",
 				ArgsUsage: "[PATH]",
 				Aliases:   []string{"q"},
-				Flags: []cli.Flag{
-					flagInteractive,
-				},
 				Action: func(ctx *cli.Context) error {
 					db, err := database.FromContext(ctx.Context)
 					if err != nil {
@@ -158,14 +155,7 @@ func Run() {
 					removeLabel,
 				},
 			},
-			{
-				Name:    "edit",
-				Usage:   "Edit items in the storage",
-				Aliases: []string{"e"},
-				Subcommands: []*cli.Command{
-					editLabel,
-				},
-			},
+			editLabel,
 		},
 	}
 

@@ -15,14 +15,24 @@ type Label struct {
 	Color string `db:"color"`
 }
 
-func (m *DB) UpdateLabel(oldName string, newName string, newColor string) error {
-	labelId, err := getLabelId(m.db, oldName)
-	if err != nil {
-		return err
-	}
+func (m *DB) UpdateLabel(name string, newName string, newColor string) error {
+	err := tx(m.db, context.TODO(), func(ctx context.Context, tx *sqlx.Tx) error {
+		if len(newName) > 0 {
+			_, err := tx.ExecContext(ctx, `UPDATE Label SET name = $1 WHERE name = $3`, newName, newColor, name)
+			if err != nil {
+				return err
+			}
 
-	_, err = m.db.Exec("UPDATE Label SET (name, color) VALUES ($1, $2) WHERE labelId = $3",
-		newName, newColor, labelId)
+			name = newName
+		}
+
+		if len(newColor) > 0 {
+			err := UpsertLabel(tx, ctx, name, newColor)
+			return err
+		}
+
+		return nil
+	})
 
 	return err
 }

@@ -87,10 +87,10 @@ var (
 	}
 
 	editLabel = &cli.Command{
-		Name:      "label",
-		Usage:     "Edit a label",
+		Name:      "edit",
+		Usage:     "Change the name or color of a label",
 		ArgsUsage: "[label to edit]",
-		Aliases:   []string{"l"},
+		Aliases:   []string{"e"},
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "name",
@@ -109,7 +109,7 @@ var (
 			}
 			label := ctx.Args().First()
 
-			if !ctx.IsSet("name") || !ctx.IsSet("color") {
+			if !ctx.IsSet("name") && !ctx.IsSet("color") {
 				return errors.New("please provide new values (name or color)")
 			}
 
@@ -123,7 +123,7 @@ var (
 				return err
 			}
 
-			log.Printf("Label edited. New value: %s", label)
+			log.Printf("Label edited.")
 
 			return nil
 		},
