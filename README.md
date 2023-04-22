@@ -5,13 +5,13 @@ Buzz around your files using labels! 🐝
 
 </div>
 
-Labee is a command-line tool that can be used to attach labels to your files.
-This allows for grouping related files together, easy access and integration with your favorite CLI tools.
+Introducing `labee`, a file labelling tool written in golang!
+With it's simple command-line interface, you can easily attach labels to your files and organize them based on their relationships. This makes it easy for you to access your files and seamlessly integrate them with your favorite CLI tools.
 
+Here are some sample commands that showcase labee's use cases:
 ```sh
-labee add -l TODO item.txt                  # add a file to the storage and attach the label 'TODO' to it
-labee edit --color "#00FF00" TODO           # modify a label (add a color to it)
-labee find --interactive                    # open an interactive view of all files using fzf
-labee find -l TODO -n '*.txt' | xargs nvim  # find text files that the label 'TODO' is attached to
-                                            # then open the selected files in neovim
+labee add -l TODO item.txt                  # Add the file 'item.txt' to the storage and attach the label 'TODO' to it
+labee edit --color '#00FF00' TODO           # Change the label 'TODO' to include the color '#00FF00'
+labee find --interactive                    # Open an interactive view of all files inside fzf
+labee find -l TODO -n '*.txt' | xargs nvim  # Find all text files with the label 'TODO' attached and open them in neovim
 ```
