@@ -44,6 +44,7 @@ func Run() {
 				ArgsUsage: "[PATH]",
 				Aliases:   []string{"q"},
 				Flags: []cli.Flag{
+					flagInteractive,
 					&cli.StringSliceFlag{
 						Name:    "labels",
 						Aliases: []string{"l"},
@@ -87,6 +88,10 @@ func Run() {
 						if err != nil {
 							return err
 						}
+					}
+
+					if interactive {
+						return openInteractiveFileMode(files)
 					}
 
 					// Just print out the file paths
