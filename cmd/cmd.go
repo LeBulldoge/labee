@@ -103,6 +103,37 @@ func Run() {
 				},
 			},
 			{
+				Name:      "info",
+				Usage:     "Print out information about the specified files",
+				ArgsUsage: "[PATH]",
+				Aliases:   []string{"q"},
+				Flags: []cli.Flag{
+					flagInteractive,
+				},
+				Action: func(ctx *cli.Context) error {
+					db, err := database.FromContext(ctx.Context)
+					if err != nil {
+						return err
+					}
+
+					if !ctx.Args().Present() {
+						return ErrNoArgs
+					}
+
+					filenames := ctx.Args().Slice()
+					for _, filename := range filenames {
+						labels, err := db.GetFileLabels(filename)
+						if err != nil {
+							return err
+						}
+
+						printFileInfo(filename, labels)
+					}
+
+					return nil
+				},
+			},
+			{
 				Name:      "add",
 				Usage:     "Attach labels to files",
 				ArgsUsage: "[FILE...]",

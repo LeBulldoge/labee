@@ -41,19 +41,10 @@ func openInteractiveMode(strs []string, preview string) error {
 	return nil
 }
 
-func openInteractiveLabelMode(labels []database.Label) error {
-	strs := []string{}
-	for _, t := range labels {
-		strs = append(strs, color.HEX(t.Color).Sprint(t.Name))
-	}
-
-	return openInteractiveMode(strs, "labee q l {}")
-}
-
 func openInteractiveFileMode(files []database.File) error {
 	strs := []string{}
 	for _, f := range files {
 		strs = append(strs, f.Path)
 	}
-	return openInteractiveMode(strs, "labee q f {}")
+	return openInteractiveMode(strs, "labee info {}")
 }
