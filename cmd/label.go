@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 
 	"github.com/LeBulldoge/labee/internal/database"
 	"github.com/gookit/color"
@@ -35,85 +34,6 @@ func colorize(str string, hexColor string) (string, error) {
 	}
 
 	return color.HEX(hexColor).Sprint(str), nil
-}
-
-var queryLabel = &cli.Command{
-	Name:      "label",
-	Usage:     "Find files by their labels",
-	ArgsUsage: "[LABEL...]",
-	Aliases:   []string{"l"},
-	Flags: []cli.Flag{
-		flagInteractive,
-		&cli.BoolFlag{
-			Name:    "all",
-			Aliases: []string{"a"},
-			Usage:   "Show all available labels",
-		},
-	},
-	Action: func(ctx *cli.Context) error {
-		db, err := database.FromContext(ctx.Context)
-		if err != nil {
-			return err
-		}
-
-		if ctx.Bool("all") {
-			labels, err := db.GetAllLabels()
-			if err != nil {
-				return err
-			}
-
-			if len(labels) == 0 {
-				return errors.New("no files found")
-			}
-
-			if interactive {
-				return openInteractiveLabelMode(labels)
-			}
-
-			cLabels := []string{}
-			for _, t := range labels {
-				cl, err := colorize(t.Name, t.Color)
-				if err != nil {
-					return err
-				}
-
-				cLabels = append(cLabels, cl)
-			}
-
-			fmt.Println(strings.Join(cLabels, ", "))
-
-			return nil
-		}
-
-		args := ctx.Args().Slice()
-		if pipeArgsAvailable() {
-			args = append(args, readPipeArgs()...)
-		}
-
-		if len(args) == 0 {
-			return ErrNoArgs
-		}
-
-		if err := doLabelsExist(db, args); err != nil {
-			return err
-		}
-
-		files, err := db.GetFilesByLabels(args)
-		if err != nil {
-			return errors.New("no files found")
-		}
-
-		if interactive {
-			return openInteractiveFileMode(files)
-		}
-
-		// Just print out the file paths
-		for _, f := range files {
-			fmt.Println(f.Path)
-		}
-
-		return nil
-	},
 }
 
 func doLabelsExist(db *database.DB, labelNames []string) error {
