@@ -126,7 +126,8 @@ func (m *DB) GetFilesFilteredWithLabels(labels []string, pattern string, pathPre
     HAVING COUNT(File.path) = ` + strconv.Itoa(len(labels))
 
 	filters := []string{"Label.name IN ('" + strings.Join(labels, "','") + "')"}
-	if ff := buildFilenameFilters(pattern, pathPrefix); len(ff) > 0 {
+
+	if len(pattern) > 0 || len(pathPrefix) > 0 {
 		filters = append(filters, buildFilenameFilters(pattern, pathPrefix))
 	}
 
@@ -142,11 +143,10 @@ func (m *DB) GetFilesFilteredWithLabels(labels []string, pattern string, pathPre
 }
 
 func (m *DB) GetFilesFiltered(pattern string, pathPrefix string) ([]File, error) {
-	filters := buildFilenameFilters(pattern, pathPrefix)
-
 	stmt := `SELECT File.* FROM File`
-	if len(filters) > 0 {
-		stmt += " WHERE " + filters
+
+	if len(pattern) > 0 || len(pathPrefix) > 0 {
+		stmt += " WHERE " + buildFilenameFilters(pattern, pathPrefix)
 	}
 
 	files := []File{}
@@ -160,14 +160,13 @@ func (m *DB) GetFilesFiltered(pattern string, pathPrefix string) ([]File, error)
 
 func buildFilenameFilters(pattern string, pathPrefix string) string {
 	var filterBuilder strings.Builder
-	if len(pattern) > 0 || len(pathPrefix) > 0 {
-		filterBuilder.Grow(len(pattern) + len(pathPrefix))
-		filterBuilder.WriteString("path GLOB '")
-		filterBuilder.WriteString(pathPrefix)
-		filterBuilder.WriteString("*")
-		filterBuilder.WriteString(pattern)
-		filterBuilder.WriteString("'")
-	}
+
+	filterBuilder.Grow(len(pattern) + len(pathPrefix))
+	filterBuilder.WriteString("path GLOB '")
+	filterBuilder.WriteString(pathPrefix)
+	filterBuilder.WriteString("*")
+	filterBuilder.WriteString(pattern)
+	filterBuilder.WriteString("'")
 
 	return filterBuilder.String()
 }
