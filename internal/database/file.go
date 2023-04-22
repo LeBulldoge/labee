@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
@@ -113,6 +114,64 @@ func (m *DB) GetFilesByLabels(labels []string) ([]File, error) {
 	}
 
 	return files, nil
+}
+
+func (m *DB) GetFilesFilteredWithLabels(labels []string, pattern string, pathPrefix string) ([]File, error) {
+	stmt := `SELECT File.id, File.path
+      FROM File, Label
+      INNER JOIN FileInfo ON File.id  = FileInfo.fileId
+                         AND Label.id = FileInfo.labelId
+      WHERE %s
+    GROUP BY File.path
+    HAVING COUNT(File.path) = ` + strconv.Itoa(len(labels))
+
+	filters := []string{"Label.name IN ('" + strings.Join(labels, "','") + "')"}
+	if ff := buildFilenameFilters(pattern, pathPrefix); len(ff) > 0 {
+		filters = append(filters, buildFilenameFilters(pattern, pathPrefix))
+	}
+
+	stmt = fmt.Sprintf(stmt, strings.Join(filters, " AND "))
+
+	files := []File{}
+	err := m.db.Select(&files, stmt)
+	if err != nil {
+		return nil, err
+	}
+
+	return files, nil
+}
+
+func (m *DB) GetFilesFiltered(pattern string, pathPrefix string) ([]File, error) {
+	filters := buildFilenameFilters(pattern, pathPrefix)
+
+	stmt := `SELECT File.* FROM File`
+	if len(filters) > 0 {
+		stmt += " WHERE " + filters
+	}
+
+	fmt.Printf("stmt: %v\n", stmt)
+
+	files := []File{}
+	err := m.db.Select(&files, stmt)
+	if err != nil {
+		return nil, err
+	}
+
+	return files, nil
+}
+
+func buildFilenameFilters(pattern string, pathPrefix string) string {
+	var filterBuilder strings.Builder
+	if len(pattern) > 0 || len(pathPrefix) > 0 {
+		filterBuilder.Grow(len(pattern) + len(pathPrefix))
+		filterBuilder.WriteString("path GLOB '")
+		filterBuilder.WriteString(pathPrefix)
+		filterBuilder.WriteString("*")
+		filterBuilder.WriteString(pattern)
+		filterBuilder.WriteString("'")
+	}
+
+	return filterBuilder.String()
 }
 
 var (

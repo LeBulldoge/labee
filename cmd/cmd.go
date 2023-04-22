@@ -39,13 +39,62 @@ func Run() {
 		After:                  afterHook,
 		Commands: []*cli.Command{
 			{
-				Name:      "query",
-				Usage:     "Query the storage",
-				ArgsUsage: "[subcommand]",
+				Name:      "find",
+				Usage:     "Query the storage for files. Filter by labels, filename or location.",
+				ArgsUsage: "[PATH]",
 				Aliases:   []string{"q"},
-				Subcommands: []*cli.Command{
-					queryFile,
-					queryLabel,
+				Flags: []cli.Flag{
+					&cli.StringSliceFlag{
+						Name:    "labels",
+						Aliases: []string{"l"},
+						Usage:   "List of comma separated labels",
+					},
+					&cli.StringFlag{
+						Name:    "name",
+						Aliases: []string{"n"},
+						Usage:   "Glob pattern to filter the filenames with",
+					},
+				},
+				Action: func(ctx *cli.Context) error {
+					db, err := database.FromContext(ctx.Context)
+					if err != nil {
+						return err
+					}
+
+					labels := ctx.StringSlice("labels")
+					if err := doLabelsExist(db, labels); err != nil {
+						return err
+					}
+
+					pattern := ctx.String("name")
+
+					var pathPrefix string
+					if ctx.Args().Present() {
+						pathPrefix, err = filepath.Abs(ctx.Args().First())
+						if err != nil {
+							return err
+						}
+					}
+
+					var files []database.File
+					if len(labels) > 0 {
+						files, err = db.GetFilesFilteredWithLabels(labels, pattern, pathPrefix)
+						if err != nil {
+							return err
+						}
+					} else {
+						files, err = db.GetFilesFiltered(pattern, pathPrefix)
+						if err != nil {
+							return err
+						}
+					}
+
+					// Just print out the file paths
+					for _, f := range files {
+						fmt.Println(f.Path)
+					}
+
+					return nil
 				},
 			},
 			{
