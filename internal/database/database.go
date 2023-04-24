@@ -15,8 +15,6 @@ type DB struct {
 	db *sqlx.DB
 }
 
-const targetVersion = 2
-
 func New() (*DB, error) {
 	config := os.ConfigPath()
 	dbPath := filepath.Join(config, "storage.db")
@@ -41,10 +39,10 @@ func New() (*DB, error) {
 			return err
 		}
 
-		needSchemaUpdate := curVersion != targetVersion
+		needSchemaUpdate := curVersion != schema.TargetVersion
 
 		if needSchemaUpdate {
-			err := schema.ApplyMigrations(ctx, tx, curVersion, targetVersion)
+			err := schema.ApplyMigrations(ctx, tx, curVersion, schema.TargetVersion)
 			if err != nil {
 				return err
 			}
