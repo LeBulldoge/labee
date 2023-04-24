@@ -1,4 +1,5 @@
 <div align="center">
+<img src="../assets/labee-logo.png" width=180 alt="labee logo" />
 
 # labee
 Buzz around your files using labels! 🐝
