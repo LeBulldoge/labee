@@ -17,8 +17,10 @@ func FileExists(path string) bool {
 	return err == nil
 }
 
-func CreatePath(path string) error {
-	err := os.MkdirAll(path, os.ModePerm)
+func CreateFile(path string) error {
+	dir, _ := filepath.Split(path)
+
+	err := os.MkdirAll(dir, os.ModePerm)
 	if err != nil {
 		return err
 	}

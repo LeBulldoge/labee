@@ -22,7 +22,7 @@ func New() (*DB, error) {
 	dbPath := filepath.Join(config, "storage.db")
 
 	if !os.FileExists(dbPath) {
-		err := os.CreatePath(dbPath)
+		err := os.CreateFile(dbPath)
 		if err != nil {
 			return nil, err
 		}
