@@ -32,18 +32,19 @@ func setVersion(ctx context.Context, tx *sqlx.Tx, version int) error {
 }
 
 func ApplyMigrations(ctx context.Context, tx *sqlx.Tx, fromVer int, toVer int) error {
+	if fromVer == toVer {
+		return fmt.Errorf("current version: %d equals to target version: %d", fromVer, toVer)
+	}
+
+	var err error
 	if fromVer < toVer {
-		err := migrateUp(ctx, tx, fromVer, toVer)
-		if err != nil {
-			return err
-		}
-	} else if fromVer > toVer {
-		err := migrateDown(ctx, tx, fromVer, toVer)
-		if err != nil {
-			return err
-		}
+		err = migrateUp(ctx, tx, fromVer, toVer)
 	} else {
-		return nil
+		err = migrateDown(ctx, tx, fromVer, toVer)
+	}
+
+	if err != nil {
+		return err
 	}
 
 	return setVersion(ctx, tx, toVer)
