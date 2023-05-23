@@ -16,13 +16,9 @@ type migration struct {
 }
 
 func CurrentVersion(ctx context.Context, tx *sqlx.Tx) (int, error) {
-	curVersion := -1
-	err := tx.GetContext(ctx, &curVersion, "PRAGMA user_version")
-	if err != nil {
-		return curVersion, err
-	}
-
-	return curVersion, err
+	var version int
+	err := tx.GetContext(ctx, &version, "PRAGMA user_version")
+	return version, err
 }
 
 func setVersion(ctx context.Context, tx *sqlx.Tx, version int) error {
