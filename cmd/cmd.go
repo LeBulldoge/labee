@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/LeBulldoge/labee/internal/database"
+	"github.com/gookit/color"
 	"github.com/urfave/cli/v2"
 )
 
@@ -96,7 +97,11 @@ func Run() {
 
 					// Just print out the file paths
 					for _, f := range files {
-						fmt.Println(f.Path)
+						if f.Deleted {
+							color.Yellowln(f.Path)
+						} else {
+							fmt.Println(f.Path)
+						}
 					}
 
 					return nil

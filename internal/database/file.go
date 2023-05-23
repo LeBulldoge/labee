@@ -9,12 +9,14 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/LeBulldoge/labee/internal/os"
 	"github.com/jmoiron/sqlx"
 )
 
 type File struct {
-	Id   int64  `db:"id"`
-	Path string `db:"path"`
+	Id      int64  `db:"id"`
+	Path    string `db:"path"`
+	Deleted bool
 }
 
 func (m *DB) DeleteFiles(paths []string) error {
@@ -113,6 +115,12 @@ func (m *DB) GetFilesByLabels(labels []string) ([]File, error) {
 		return nil, err
 	}
 
+	for _, file := range files {
+		if !os.FileExists(file.Path) {
+			file.Deleted = true
+		}
+	}
+
 	return files, nil
 }
 
@@ -137,6 +145,12 @@ func (m *DB) GetFilesFilteredWithLabels(labels []string, pattern string, pathPre
 	err := m.db.Select(&files, stmt)
 	if err != nil {
 		return nil, err
+	}
+
+	for i := range files {
+		if !os.FileExists(files[i].Path) {
+			files[i].Deleted = true
+		}
 	}
 
 	return files, nil
