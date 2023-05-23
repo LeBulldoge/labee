@@ -42,7 +42,7 @@ func Run() {
 				Name:      "find",
 				Usage:     "Query the storage for files. Filter by labels, filename or location.",
 				ArgsUsage: "[PATH]",
-				Aliases:   []string{"q"},
+				Aliases:   []string{"f"},
 				Flags: []cli.Flag{
 					flagInteractive,
 					&cli.StringSliceFlag{
@@ -106,7 +106,7 @@ func Run() {
 				Name:      "info",
 				Usage:     "Print out information about the specified files",
 				ArgsUsage: "[PATH]",
-				Aliases:   []string{"q"},
+				Aliases:   []string{"i"},
 				Action: func(ctx *cli.Context) error {
 					db, err := database.FromContext(ctx.Context)
 					if err != nil {
