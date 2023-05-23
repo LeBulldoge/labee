@@ -18,9 +18,9 @@ type File struct {
 }
 
 func (m *DB) DeleteFiles(paths []string) error {
-	err := tx(m.db, context.TODO(), func(ctx context.Context, tx *sqlx.Tx) error {
+	err := tx(context.TODO(), m.db, func(ctx context.Context, tx *sqlx.Tx) error {
 		for _, v := range paths {
-			err := deleteFile(tx, ctx, v)
+			err := deleteFile(ctx, tx, v)
 			if err != nil {
 				return err
 			}
@@ -34,7 +34,7 @@ func (m *DB) DeleteFiles(paths []string) error {
 
 var ErrCouldNotDeleteFile = errors.New("could not delete file")
 
-func deleteFile(tx *sqlx.Tx, ctx context.Context, path string) error {
+func deleteFile(ctx context.Context, tx *sqlx.Tx, path string) error {
 	stmt := `DELETE FROM File WHERE path = ?`
 
 	res, err := tx.ExecContext(ctx, stmt, path)
@@ -51,7 +51,7 @@ func deleteFile(tx *sqlx.Tx, ctx context.Context, path string) error {
 	return err
 }
 
-func InsertFile(tx *sqlx.Tx, ctx context.Context, path string) error {
+func InsertFile(ctx context.Context, tx *sqlx.Tx, path string) error {
 	stmt := "INSERT INTO File (path) VALUES (?)"
 	_, err := tx.ExecContext(ctx, stmt, path)
 
@@ -199,7 +199,7 @@ func getOrInsertFile(tx *sqlx.Tx, path string) (int64, error) {
 }
 
 func (m *DB) AddFilesAndLinks(filepaths []string, labelNames []string) error {
-	err := tx(m.db, context.TODO(), func(ctx context.Context, tx *sqlx.Tx) error {
+	err := tx(context.TODO(), m.db, func(ctx context.Context, tx *sqlx.Tx) error {
 		var labelIds []int64
 		for _, name := range labelNames {
 			label, err := getOrInsertLabel(ctx, tx, name)

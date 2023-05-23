@@ -16,7 +16,7 @@ type Label struct {
 }
 
 func (m *DB) UpdateLabel(name string, newName string, newColor string) error {
-	err := tx(m.db, context.TODO(), func(ctx context.Context, tx *sqlx.Tx) error {
+	err := tx(context.TODO(), m.db, func(ctx context.Context, tx *sqlx.Tx) error {
 		if len(newName) > 0 {
 			_, err := tx.ExecContext(ctx, `UPDATE Label SET name = $1 WHERE name = $3`, newName, newColor, name)
 			if err != nil {
@@ -27,7 +27,7 @@ func (m *DB) UpdateLabel(name string, newName string, newColor string) error {
 		}
 
 		if len(newColor) > 0 {
-			err := UpsertLabel(tx, ctx, name, newColor)
+			err := UpsertLabel(ctx, tx, name, newColor)
 			return err
 		}
 
@@ -92,7 +92,7 @@ func (m *DB) LabelExists(name string) bool {
 
 func (m *DB) AddLabel(name string, color string) (*Label, error) {
 	var result *Label
-	err := tx(m.db, context.TODO(), func(ctx context.Context, tx *sqlx.Tx) error {
+	err := tx(context.TODO(), m.db, func(ctx context.Context, tx *sqlx.Tx) error {
 		label, err := getOrInsertLabel(ctx, tx, name)
 		if err != nil {
 			return err
@@ -102,7 +102,7 @@ func (m *DB) AddLabel(name string, color string) (*Label, error) {
 			return nil
 		}
 
-		err = UpsertLabel(tx, ctx, name, color)
+		err = UpsertLabel(ctx, tx, name, color)
 		if err != nil {
 			return err
 		}
@@ -121,7 +121,7 @@ func (m *DB) AddLabel(name string, color string) (*Label, error) {
 }
 
 func (m *DB) DeleteLabel(name string) error {
-	err := tx(m.db, context.TODO(), func(ctx context.Context, tx *sqlx.Tx) error {
+	err := tx(context.TODO(), m.db, func(ctx context.Context, tx *sqlx.Tx) error {
 		_, err := tx.ExecContext(ctx, `DELETE FROM Label WHERE name = ?`, name)
 		return err
 	})
@@ -157,7 +157,7 @@ func getOrInsertLabel(ctx context.Context, tx *sqlx.Tx, name string) (*Label, er
 	return &label, err
 }
 
-func UpsertLabel(tx *sqlx.Tx, ctx context.Context, name string, color string) error {
+func UpsertLabel(ctx context.Context, tx *sqlx.Tx, name string, color string) error {
 	stmt :=
 		`INSERT INTO Label (name, color) VALUES ($1, $2)
         ON CONFLICT(name) DO UPDATE SET color=excluded.color`
@@ -167,7 +167,7 @@ func UpsertLabel(tx *sqlx.Tx, ctx context.Context, name string, color string) er
 	return err
 }
 
-func RenameLabel(tx *sqlx.Tx, ctx context.Context, oldName string, newName string) error {
+func RenameLabel(ctx context.Context, tx *sqlx.Tx, oldName string, newName string) error {
 	stmt :=
 		`UPDATE Label SET
     name = $1

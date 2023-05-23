@@ -33,7 +33,7 @@ func New() (*DB, error) {
 
 	db.SetMaxOpenConns(1)
 
-	err = tx(db, context.TODO(), func(ctx context.Context, tx *sqlx.Tx) error {
+	err = tx(context.TODO(), db, func(ctx context.Context, tx *sqlx.Tx) error {
 		curVersion, err := schema.CurrentVersion(ctx, tx)
 		if err != nil {
 			return err
@@ -69,7 +69,7 @@ func (m *DB) Close() error {
 	return m.db.Close()
 }
 
-func tx(db *sqlx.DB, ctx context.Context, f func(context.Context, *sqlx.Tx) error) error {
+func tx(ctx context.Context, db *sqlx.DB, f func(context.Context, *sqlx.Tx) error) error {
 	tx, err := db.BeginTxx(ctx, nil)
 
 	if err != nil {
