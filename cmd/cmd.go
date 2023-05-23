@@ -12,7 +12,7 @@ import (
 )
 
 func beforeHook(ctx *cli.Context) error {
-	db, err := database.New()
+	db, err := database.New(ctx.Context)
 	if err != nil {
 		return err
 	}
@@ -203,7 +203,7 @@ func addLink(ctx *cli.Context) error {
 		absPaths = append(absPaths, path)
 	}
 
-	err = db.AddFilesAndLinks(absPaths, labelNames)
+	err = db.AddFilesAndLinks(ctx.Context, absPaths, labelNames)
 	if err != nil {
 		return err
 	}

@@ -19,8 +19,8 @@ type File struct {
 	Deleted bool
 }
 
-func (m *DB) DeleteFiles(paths []string) error {
-	err := tx(context.TODO(), m.db, func(ctx context.Context, tx *sqlx.Tx) error {
+func (m *DB) DeleteFiles(ctx context.Context, paths []string) error {
+	err := tx(ctx, m.db, func(ctx context.Context, tx *sqlx.Tx) error {
 		for _, v := range paths {
 			err := deleteFile(ctx, tx, v)
 			if err != nil {
@@ -218,8 +218,8 @@ func getOrInsertFile(tx *sqlx.Tx, path string) (int64, error) {
 	return id, err
 }
 
-func (m *DB) AddFilesAndLinks(filepaths []string, labelNames []string) error {
-	err := tx(context.TODO(), m.db, func(ctx context.Context, tx *sqlx.Tx) error {
+func (m *DB) AddFilesAndLinks(ctx context.Context, filepaths []string, labelNames []string) error {
+	err := tx(ctx, m.db, func(ctx context.Context, tx *sqlx.Tx) error {
 		var labelIds []int64
 		for _, name := range labelNames {
 			label, err := getOrInsertLabel(ctx, tx, name)

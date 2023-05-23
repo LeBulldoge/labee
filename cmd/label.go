@@ -68,13 +68,13 @@ var (
 			}
 			args := ctx.Args().Slice()
 
-			db, err := database.New()
+			db, err := database.New(ctx.Context)
 			if err != nil {
 				return err
 			}
 
 			for i := 0; i < len(args); i++ {
-				err := db.DeleteLabel(args[i])
+				err := db.DeleteLabel(ctx.Context, args[i])
 				if err != nil {
 					return err
 				}
@@ -113,12 +113,12 @@ var (
 				return errors.New("please provide new values (name or color)")
 			}
 
-			db, err := database.New()
+			db, err := database.New(ctx.Context)
 			if err != nil {
 				return err
 			}
 
-			err = db.UpdateLabel(label, ctx.String("name"), ctx.String("color"))
+			err = db.UpdateLabel(ctx.Context, label, ctx.String("name"), ctx.String("color"))
 			if err != nil {
 				return err
 			}

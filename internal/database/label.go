@@ -15,8 +15,8 @@ type Label struct {
 	Color string `db:"color"`
 }
 
-func (m *DB) UpdateLabel(name string, newName string, newColor string) error {
-	err := tx(context.TODO(), m.db, func(ctx context.Context, tx *sqlx.Tx) error {
+func (m *DB) UpdateLabel(ctx context.Context, name string, newName string, newColor string) error {
+	err := tx(ctx, m.db, func(ctx context.Context, tx *sqlx.Tx) error {
 		if len(newName) > 0 {
 			_, err := tx.ExecContext(ctx, `UPDATE Label SET name = $1 WHERE name = $3`, newName, newColor, name)
 			if err != nil {
@@ -90,9 +90,9 @@ func (m *DB) LabelExists(name string) bool {
 	return err == nil
 }
 
-func (m *DB) AddLabel(name string, color string) (*Label, error) {
+func (m *DB) AddLabel(ctx context.Context, name string, color string) (*Label, error) {
 	var result *Label
-	err := tx(context.TODO(), m.db, func(ctx context.Context, tx *sqlx.Tx) error {
+	err := tx(ctx, m.db, func(ctx context.Context, tx *sqlx.Tx) error {
 		label, err := getOrInsertLabel(ctx, tx, name)
 		if err != nil {
 			return err
@@ -120,8 +120,8 @@ func (m *DB) AddLabel(name string, color string) (*Label, error) {
 	return result, nil
 }
 
-func (m *DB) DeleteLabel(name string) error {
-	err := tx(context.TODO(), m.db, func(ctx context.Context, tx *sqlx.Tx) error {
+func (m *DB) DeleteLabel(ctx context.Context, name string) error {
+	err := tx(ctx, m.db, func(ctx context.Context, tx *sqlx.Tx) error {
 		_, err := tx.ExecContext(ctx, `DELETE FROM Label WHERE name = ?`, name)
 		return err
 	})

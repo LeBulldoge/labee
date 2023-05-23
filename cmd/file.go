@@ -61,7 +61,7 @@ func removeFileAction(ctx *cli.Context) error {
 		paths = append(paths, path)
 	}
 
-	err = db.DeleteFiles(paths)
+	err = db.DeleteFiles(ctx.Context, paths)
 	if err != nil {
 		return err
 	}
