@@ -94,6 +94,8 @@ func (m *DB) GetFiles(keywords []string) ([]File, error) {
 		return nil, ErrFilesNotFound
 	}
 
+	files = markDeletedFiles(files)
+
 	return files, nil
 }
 
@@ -115,13 +117,19 @@ func (m *DB) GetFilesByLabels(labels []string) ([]File, error) {
 		return nil, err
 	}
 
-	for _, file := range files {
-		if !os.FileExists(file.Path) {
-			file.Deleted = true
+	files = markDeletedFiles(files)
+
+	return files, nil
+}
+
+func markDeletedFiles(files []File) []File {
+	for i := range files {
+		if !os.FileExists(files[i].Path) {
+			files[i].Deleted = true
 		}
 	}
 
-	return files, nil
+	return files
 }
 
 func (m *DB) GetFilesFilteredWithLabels(labels []string, pattern string, pathPrefix string) ([]File, error) {
@@ -147,11 +155,7 @@ func (m *DB) GetFilesFilteredWithLabels(labels []string, pattern string, pathPre
 		return nil, err
 	}
 
-	for i := range files {
-		if !os.FileExists(files[i].Path) {
-			files[i].Deleted = true
-		}
-	}
+	files = markDeletedFiles(files)
 
 	return files, nil
 }
@@ -168,6 +172,8 @@ func (m *DB) GetFilesFiltered(pattern string, pathPrefix string) ([]File, error)
 	if err != nil {
 		return nil, err
 	}
+
+	files = markDeletedFiles(files)
 
 	return files, nil
 }
